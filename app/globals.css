@@ -1,0 +1,103 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  /* Dark theme — MAAR Pulse's native mode: deep signal-room black, cyan/violet duotone */
+  --surface-base: 8 9 11;
+  --surface-raised: 17 19 23;
+  --surface-overlay: 24 26 32;
+  --border: 38 41 48;
+
+  --text-ink: 244 245 247;
+  --text-muted: 158 163 172;
+  --text-faint: 100 105 114;
+
+  --signal: 45 224 196;      /* cyan-teal "live" accent */
+  --signal-soft: 20 128 112;
+  --pulse-violet: 138 124 255; /* premium brand violet, used sparingly */
+  --pulse-violet-soft: 82 72 168;
+  --danger: 255 92 92;
+}
+
+.light {
+  /* Light theme — deliberately warm paper-white, not an inverted dark theme */
+  --surface-base: 250 250 249;
+  --surface-raised: 255 255 255;
+  --surface-overlay: 244 244 242;
+  --border: 227 227 224;
+
+  --text-ink: 20 21 24;
+  --text-muted: 92 96 104;
+  --text-faint: 140 144 152;
+
+  --signal: 8 150 133;
+  --signal-soft: 209 245 240;
+  --pulse-violet: 99 82 224;
+  --pulse-violet-soft: 231 227 255;
+  --danger: 214 58 58;
+}
+
+* {
+  border-color: rgb(var(--border));
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  background-color: rgb(var(--surface-base));
+  color: rgb(var(--text-ink));
+  font-family: var(--font-body), sans-serif;
+}
+
+::selection {
+  background-color: rgb(var(--signal) / 0.3);
+}
+
+/* Focus visibility — accessibility floor */
+:focus-visible {
+  outline: 2px solid rgb(var(--signal));
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+/* Scrollbar */
+::-webkit-scrollbar { width: 10px; height: 10px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb {
+  background: rgb(var(--border));
+  border-radius: 8px;
+}
+::-webkit-scrollbar-thumb:hover { background: rgb(var(--text-faint)); }
+
+/* Skeleton shimmer */
+.skeleton {
+  background: linear-gradient(
+    90deg,
+    rgb(var(--surface-raised)) 0%,
+    rgb(var(--surface-overlay)) 50%,
+    rgb(var(--surface-raised)) 100%
+  );
+  background-size: 800px 100%;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+.glass {
+  background: rgb(var(--surface-raised) / 0.72);
+  backdrop-filter: blur(16px) saturate(140%);
+  -webkit-backdrop-filter: blur(16px) saturate(140%);
+}
+
+.text-balance {
+  text-wrap: balance;
+}
