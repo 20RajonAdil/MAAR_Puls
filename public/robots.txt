@@ -7,4 +7,4 @@ Disallow: /subscriptions
 Disallow: /api/
 Disallow: /api/auth/
 
-Sitemap: https://maar-puls-vam1.vercel.app/sitemap.xml
+Sitemap: https://maar-puls.vercel.app/sitemap.xml

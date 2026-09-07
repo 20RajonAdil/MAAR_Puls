@@ -1,17 +1,17 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
 <url>
-<loc>https://maar-puls-vam1.vercel.app/</loc>
+<loc>https://maar-puls.vercel.app/</loc>
 <changefreq>hourly</changefreq>
 <priority>1.0</priority>
 </url>
 <url>
-<loc>https://maar-puls-vam1.vercel.app/explore</loc>
+<loc>https://maar-puls.vercel.app/explore</loc>
 <changefreq>daily</changefreq>
 <priority>0.6</priority>
 </url>
 <url>
-<loc>https://maar-puls-vam1.vercel.app/search</loc>
+<loc>https://maar-puls.vercel.app/search</loc>
 <changefreq>daily</changefreq>
 <priority>0.6</priority>
 </url>

@@ -32,8 +32,8 @@ MAAR Pulse uses [NextAuth.js](https://next-auth.js.org/) with the Google provide
 3. Click **Create Credentials → OAuth client ID**.
    - Application type: **Web application**
    - Name: anything, e.g. "MAAR Pulse"
-   - **Authorized JavaScript origins**: `http://localhost:3000` for local dev, and `https://maar-puls-vam1.vercel.app` for production
-   - **Authorized redirect URIs**: `http://localhost:3000/api/auth/callback/google` for local dev, and `https://maar-puls-vam1.vercel.app/api/auth/callback/google` for production — this exact path is required, NextAuth listens on it.
+   - **Authorized JavaScript origins**: `http://localhost:3000` for local dev, and `https://maar-puls.vercel.app` for production
+   - **Authorized redirect URIs**: `http://localhost:3000/api/auth/callback/google` for local dev, and `https://maar-puls.vercel.app/api/auth/callback/google` for production — this exact path is required, NextAuth listens on it.
 4. Copy the generated **Client ID** and **Client secret** into `.env.local`:
    ```
    GOOGLE_CLIENT_ID=xxxxxxxx.apps.googleusercontent.com
@@ -47,7 +47,7 @@ MAAR Pulse uses [NextAuth.js](https://next-auth.js.org/) with the Google provide
    NEXTAUTH_SECRET=<paste the output here>
    NEXTAUTH_URL=http://localhost:3000
    ```
-   (On Vercel, set `NEXTAUTH_URL=https://maar-puls-vam1.vercel.app` instead — no trailing slash.)
+   (On Vercel, set `NEXTAUTH_URL=https://maar-puls.vercel.app` instead — no trailing slash.)
 6. Restart `npm run dev`. Click **Sign in** in the header — it should redirect to the real Google account chooser, then back to MAAR Pulse signed in with your Google name, email and profile photo showing in the header avatar.
 
 When you deploy (e.g. to Vercel), add a second Authorized redirect URI for your production domain in the same Google Cloud OAuth client, and set `NEXTAUTH_URL` to that production URL in your host's environment variables.
