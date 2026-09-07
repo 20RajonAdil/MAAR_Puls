@@ -1,20 +1,22 @@
 'use client';
 
-import { useState } from 'react';
 import { Button } from '@/components/ui/button';
+import { useSubscriptions } from '@/hooks/use-subscriptions';
+import type { ChannelSummary } from '@/types/youtube';
 
-export function SubscribeButton({ channelTitle }: { channelTitle: string }) {
-  const [subscribed, setSubscribed] = useState(false);
+export function SubscribeButton({ channel }: { channel: ChannelSummary }) {
+  const { ready, isSubscribed, toggle } = useSubscriptions();
+  const subscribed = ready && isSubscribed(channel.id);
 
   return (
     <Button
       variant={subscribed ? 'secondary' : 'primary'}
       size="md"
-      onClick={() => setSubscribed((s) => !s)}
+      onClick={() => toggle(channel)}
       aria-pressed={subscribed}
       className="rounded-full"
     >
-      {subscribed ? `Subscribed` : `Subscribe`}
+      {subscribed ? 'Subscribed' : 'Subscribe'}
     </Button>
   );
 }

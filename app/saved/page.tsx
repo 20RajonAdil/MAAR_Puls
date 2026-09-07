@@ -5,12 +5,12 @@ import { VideoCard } from '@/components/video/video-card';
 import { EmptyState } from '@/components/ui/state-views';
 
 export default function SavedPage() {
-  const { items, ready } = useLocalVideoList('maar-pulse:saved');
+  const { items, ready } = useLocalVideoList('saved');
 
   return (
     <div className="container py-6">
       <h1 className="mb-1 font-display text-xl font-semibold text-ink">Watch later</h1>
-      <p className="mb-6 text-xs text-muted">Stored on this device. Sign in to sync across devices.</p>
+      <p className="mb-6 text-xs text-muted">Saved on this device, and synced to your Google account when signed in.</p>
 
       {!ready ? null : items.length === 0 ? (
         <EmptyState title="Nothing saved yet" body="Tap Save on any video to add it to your watch-later list." />

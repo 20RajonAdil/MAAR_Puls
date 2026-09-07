@@ -5,7 +5,7 @@ import { useLocalVideoList } from '@/hooks/use-local-video-list';
 import type { VideoSummary } from '@/types/youtube';
 
 export function RecordHistory({ video }: { video: VideoSummary }) {
-  const { add } = useLocalVideoList('maar-pulse:history');
+  const { add } = useLocalVideoList('history');
 
   useEffect(() => {
     add(video);

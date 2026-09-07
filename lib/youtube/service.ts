@@ -93,7 +93,28 @@ function mapVideoItem(item: any): VideoSummary {
     duration: item.contentDetails?.duration,
     viewCount: item.statistics?.viewCount,
     likeCount: item.statistics?.likeCount,
+    // Only present when the `status` part was requested; absent (undefined)
+    // is treated as "unknown, assume playable" by isEmbeddable() below.
+    embeddable: item.status ? item.status.embeddable !== false : undefined,
   };
+}
+
+/** true unless a detail lookup explicitly told us the owner disabled
+ * playback on other sites — undefined (no status data) is kept, not
+ * dropped, since we'd rather show a video than wrongly hide one. */
+function isEmbeddable(video: VideoSummary): boolean {
+  return video.embeddable !== false;
+}
+
+/** Internal — fetches full video details without filtering, so callers
+ * that merge these into a search-result list can decide what to drop. */
+async function fetchVideoDetails(ids: string): Promise<VideoSummary[]> {
+  const data = await ytFetch(
+    '/videos',
+    { part: 'snippet,contentDetails,statistics,status', id: ids },
+    REVALIDATE.videos
+  );
+  return data.items.map(mapVideoItem);
 }
 
 /** Full-text search across videos. Mirrors YouTube's `search.list`. */
@@ -119,11 +140,15 @@ export async function searchVideos(opts: {
   );
 
   const ids = data.items.map((i: any) => i.id.videoId).filter(Boolean).join(',');
-  const enriched = ids ? await getVideosByIds(ids) : [];
+  const enriched = ids ? await fetchVideoDetails(ids) : [];
   const byId = new Map(enriched.map((v) => [v.id, v]));
 
+  const items = data.items
+    .map((i: any) => byId.get(i.id.videoId) ?? mapVideoItem(i))
+    .filter(isEmbeddable);
+
   return {
-    items: data.items.map((i: any) => byId.get(i.id.videoId) ?? mapVideoItem(i)),
+    items,
     nextPageToken: data.nextPageToken,
     prevPageToken: data.prevPageToken,
   };
@@ -140,14 +165,12 @@ export async function searchChannels(query: string, pageToken?: string): Promise
   return ids ? { items: await getChannelsByIds(ids), nextPageToken: data.nextPageToken } : { items: [] };
 }
 
-/** Full video detail lookup — snippet + contentDetails (duration) + statistics. */
+/** Full video detail lookup — snippet + contentDetails (duration) +
+ * statistics + status. Drops videos the owner has disabled embedding for,
+ * so nothing that would fail to play ever reaches the UI. */
 export async function getVideosByIds(ids: string): Promise<VideoSummary[]> {
-  const data = await ytFetch(
-    '/videos',
-    { part: 'snippet,contentDetails,statistics', id: ids },
-    REVALIDATE.videos
-  );
-  return data.items.map(mapVideoItem);
+  const items = await fetchVideoDetails(ids);
+  return items.filter(isEmbeddable);
 }
 
 export async function getVideoById(id: string): Promise<VideoSummary | null> {
@@ -199,10 +222,13 @@ export async function getChannelUploads(channelId: string, pageToken?: string): 
     REVALIDATE.search
   );
   const ids = data.items.map((i: any) => i.id.videoId).filter(Boolean).join(',');
-  const enriched = ids ? await getVideosByIds(ids) : [];
+  const enriched = ids ? await fetchVideoDetails(ids) : [];
   const byId = new Map(enriched.map((v) => [v.id, v]));
+  const items = data.items
+    .map((i: any) => byId.get(i.id.videoId) ?? mapVideoItem(i))
+    .filter(isEmbeddable);
   return {
-    items: data.items.map((i: any) => byId.get(i.id.videoId) ?? mapVideoItem(i)),
+    items,
     nextPageToken: data.nextPageToken,
   };
 }
@@ -215,7 +241,7 @@ export async function getPopularVideos(opts: {
   const data = await ytFetch(
     '/videos',
     {
-      part: 'snippet,contentDetails,statistics',
+      part: 'snippet,contentDetails,statistics,status',
       chart: 'mostPopular',
       regionCode: opts.regionCode ?? 'US',
       videoCategoryId: opts.categoryId,
@@ -224,7 +250,7 @@ export async function getPopularVideos(opts: {
     },
     REVALIDATE.popular
   );
-  return { items: data.items.map(mapVideoItem), nextPageToken: data.nextPageToken };
+  return { items: data.items.map(mapVideoItem).filter(isEmbeddable), nextPageToken: data.nextPageToken };
 }
 
 export async function getVideoCategories(regionCode = 'US'): Promise<CategoryItem[]> {

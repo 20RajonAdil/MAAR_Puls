@@ -1,7 +1,9 @@
 'use client';
 
+import { useEffect } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { useVideos } from '@/hooks/use-videos';
+import { recordSearch } from '@/hooks/use-search-history';
 import { VideoGrid } from '@/components/video/video-grid';
 
 export default function SearchContent() {
@@ -9,6 +11,10 @@ export default function SearchContent() {
   const q = params.get('q') ?? '';
   const url = q ? `/api/youtube/search?q=${encodeURIComponent(q)}` : null;
   const { items, loading, error, hasMore, loadMore } = useVideos(url);
+
+  useEffect(() => {
+    if (q) recordSearch(q);
+  }, [q]);
 
   return (
     <div className="container py-6">

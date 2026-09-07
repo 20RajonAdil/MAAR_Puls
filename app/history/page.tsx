@@ -7,14 +7,14 @@ import { EmptyState } from '@/components/ui/state-views';
 import { Button } from '@/components/ui/button';
 
 export default function HistoryPage() {
-  const { items, ready, clear } = useLocalVideoList('maar-pulse:history');
+  const { items, ready, clear } = useLocalVideoList('history');
 
   return (
     <div className="container py-6">
       <div className="mb-6 flex items-center justify-between">
         <div>
           <h1 className="font-display text-xl font-semibold text-ink">Watch history</h1>
-          <p className="mt-1 text-xs text-muted">Stored on this device. Sign in to sync across devices.</p>
+          <p className="mt-1 text-xs text-muted">Saved on this device, and synced to your Google account when signed in.</p>
         </div>
         {items.length > 0 && (
           <Button variant="outline" size="sm" onClick={clear} className="gap-1.5">

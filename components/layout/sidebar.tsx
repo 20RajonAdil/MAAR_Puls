@@ -47,6 +47,13 @@ export function Sidebar() {
         <Settings className="h-[18px] w-[18px]" />
         Settings
       </Link>
+
+      <p className="mt-3 px-3 text-[10px] leading-relaxed text-muted">
+        Accessibility: MAAR Pulse aims to meet WCAG 2.1 AA standards.{' '}
+        <a href="mailto:rajonadil@gmail.com" className="underline hover:text-ink">
+          Report a barrier
+        </a>
+      </p>
     </aside>
   );
 }

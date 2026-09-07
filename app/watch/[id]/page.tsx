@@ -80,7 +80,7 @@ export default async function WatchPage({ params }: Props) {
           </Link>
 
           <div className="flex items-center gap-2">
-            <SubscribeButton channelTitle={video.channelTitle} />
+            {channel && <SubscribeButton channel={channel} />}
             <VideoActions video={video} />
           </div>
         </div>

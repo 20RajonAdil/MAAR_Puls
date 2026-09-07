@@ -1,56 +1,142 @@
 'use client';
 
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
+import { useSession } from 'next-auth/react';
 import type { VideoSummary } from '@/types/youtube';
 
+type ListName = 'history' | 'saved';
+
+function storageKeyFor(list: ListName) {
+  return `maar-pulse:${list}`;
+}
+
+function readLocal(list: ListName): VideoSummary[] {
+  try {
+    const raw = window.localStorage.getItem(storageKeyFor(list));
+    return raw ? JSON.parse(raw) : [];
+  } catch {
+    return [];
+  }
+}
+
+function writeLocal(list: ListName, items: VideoSummary[]) {
+  try {
+    window.localStorage.setItem(storageKeyFor(list), JSON.stringify(items));
+  } catch {
+    /* ignore (private browsing, quota, etc.) */
+  }
+}
+
+function mergeById(a: VideoSummary[], b: VideoSummary[]): VideoSummary[] {
+  const byId = new Map<string, VideoSummary>();
+  for (const v of [...a, ...b]) byId.set(v.id, v);
+  return Array.from(byId.values());
+}
+
 /**
- * Device-scoped persistence for watch history / saved videos. This is a
- * legitimate MAAR Pulse-native feature (not a YouTube API capability), so
- * it works fully today without any YouTube OAuth. Once account auth ships,
- * swap the storage backend for a per-user database table and this hook's
- * call sites don't need to change.
+ * Watch history / saved (watch later) lists.
+ *
+ * Same two-layer pattern as hooks/use-subscriptions.ts:
+ *  - localStorage: always used, instant, works offline/signed-out.
+ *  - Firestore (via /api/video-lists): only used when signed in with
+ *    Google. On sign-in, local and cloud lists are merged (union by
+ *    video id) once, then every add/remove/clear writes to both — so
+ *    the same "who they subscribe to and what they've watched" follows
+ *    the user to a new device once they sign in with the same account.
  */
-export function useLocalVideoList(storageKey: string) {
+export function useLocalVideoList(list: ListName) {
+  const { data: session, status } = useSession();
+  const signedIn = status === 'authenticated' && Boolean(session?.user?.id);
+
   const [items, setItems] = useState<VideoSummary[]>([]);
   const [ready, setReady] = useState(false);
+  const syncedForUser = useRef<string | null>(null);
 
   useEffect(() => {
-    try {
-      const raw = window.localStorage.getItem(storageKey);
-      setItems(raw ? JSON.parse(raw) : []);
-    } catch {
-      setItems([]);
-    }
+    setItems(readLocal(list));
     setReady(true);
-  }, [storageKey]);
+  }, [list]);
 
-  const persist = useCallback(
-    (next: VideoSummary[]) => {
-      setItems(next);
+  useEffect(() => {
+    if (!signedIn || !session?.user?.id) return;
+    const syncKey = `${list}:${session.user.id}`;
+    if (syncedForUser.current === syncKey) return;
+    syncedForUser.current = syncKey;
+
+    (async () => {
       try {
-        window.localStorage.setItem(storageKey, JSON.stringify(next));
+        const res = await fetch(`/api/video-lists?list=${list}`);
+        if (!res.ok) return;
+        const { items: remote } = (await res.json()) as { items: VideoSummary[] };
+
+        const local = readLocal(list);
+        const merged = mergeById(remote, local).slice(0, 200);
+
+        setItems(merged);
+        writeLocal(list, merged);
+
+        const remoteIds = new Set(remote.map((v) => v.id));
+        const toPush = local.filter((v) => !remoteIds.has(v.id));
+        await Promise.all(
+          toPush.map((video) =>
+            fetch('/api/video-lists', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ list, video }),
+            }).catch(() => {})
+          )
+        );
       } catch {
-        /* storage unavailable (private mode, quota) — state still updates in-memory */
+        /* offline or cloud sync not configured — local copy still works */
       }
-    },
-    [storageKey]
-  );
+    })();
+  }, [signedIn, session?.user?.id, list]);
 
   const add = useCallback(
     (video: VideoSummary) => {
-      persist([video, ...items.filter((v) => v.id !== video.id)].slice(0, 200));
+      setItems((prev) => {
+        const next = [video, ...prev.filter((v) => v.id !== video.id)].slice(0, 200);
+        writeLocal(list, next);
+        return next;
+      });
+      if (signedIn) {
+        fetch('/api/video-lists', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ list, video }),
+        }).catch(() => {
+          /* stays saved locally even if the cloud write fails */
+        });
+      }
     },
-    [items, persist]
+    [list, signedIn]
   );
 
   const remove = useCallback(
     (id: string) => {
-      persist(items.filter((v) => v.id !== id));
+      setItems((prev) => {
+        const next = prev.filter((v) => v.id !== id);
+        writeLocal(list, next);
+        return next;
+      });
+      if (signedIn) {
+        fetch(`/api/video-lists?list=${list}&videoId=${encodeURIComponent(id)}`, { method: 'DELETE' }).catch(() => {
+          /* stays removed locally even if the cloud write fails */
+        });
+      }
     },
-    [items, persist]
+    [list, signedIn]
   );
 
-  const clear = useCallback(() => persist([]), [persist]);
+  const clear = useCallback(() => {
+    setItems([]);
+    writeLocal(list, []);
+    if (signedIn) {
+      fetch(`/api/video-lists?list=${list}`, { method: 'DELETE' }).catch(() => {
+        /* stays cleared locally even if the cloud write fails */
+      });
+    }
+  }, [list, signedIn]);
 
   return { items, ready, add, remove, clear };
 }

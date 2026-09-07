@@ -8,7 +8,7 @@ import { useLocalVideoList } from '@/hooks/use-local-video-list';
 import type { VideoSummary } from '@/types/youtube';
 
 export function VideoActions({ video }: { video: VideoSummary }) {
-  const { items: saved_items, add, remove } = useLocalVideoList('maar-pulse:saved');
+  const { items: saved_items, add, remove } = useLocalVideoList('saved');
   const [liked, setLiked] = useState(false);
   const [copied, setCopied] = useState(false);
   const saved = saved_items.some((v) => v.id === video.id);

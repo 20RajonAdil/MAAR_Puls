@@ -2,6 +2,7 @@ import { Suspense } from 'react';
 import { Hero } from '@/components/hero/hero';
 import { Section } from '@/components/video/section';
 import { VideoRail } from '@/components/video/video-rail';
+import { PersonalizedRail } from '@/components/video/personalized-rail';
 import { VideoGridSkeleton } from '@/components/ui/skeleton';
 
 const RAILS: { title: string; categoryId?: string; href: string }[] = [
@@ -15,6 +16,7 @@ export default function HomePage() {
     <>
       <Hero />
       <div className="container">
+        <PersonalizedRail />
         {RAILS.map((rail) => (
           <Section key={rail.title} title={rail.title} href={rail.href}>
             <Suspense fallback={<VideoGridSkeleton count={8} />}>

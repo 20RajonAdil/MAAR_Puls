@@ -1,0 +1,10 @@
+User-agent: *
+Allow: /
+Disallow: /settings
+Disallow: /history
+Disallow: /saved
+Disallow: /subscriptions
+Disallow: /api/
+Disallow: /api/auth/
+
+Sitemap: https://maar-puls-vam1.vercel.app/sitemap.xml

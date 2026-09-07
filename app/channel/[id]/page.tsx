@@ -57,7 +57,7 @@ export default async function ChannelPage({ params }: Props) {
             {channel.videoCount && ` \u00b7 ${channel.videoCount} videos`}
           </p>
         </div>
-        <SubscribeButton channelTitle={channel.title} />
+        <SubscribeButton channel={channel} />
       </div>
 
       <div className="mt-6">

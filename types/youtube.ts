@@ -16,6 +16,11 @@ export interface VideoSummary {
   duration?: string; // ISO 8601, populated when detail lookup was performed
   viewCount?: string;
   likeCount?: string;
+  /** false when the uploader has disabled playback on sites other than
+   * YouTube — MAAR Pulse filters these out everywhere rather than showing
+   * a video that would just fail to play. Undefined = unknown (detail
+   * lookup wasn't performed for this item), treated as playable. */
+  embeddable?: boolean;
 }
 
 export interface ChannelSummary {

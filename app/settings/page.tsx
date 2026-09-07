@@ -1,16 +1,21 @@
 'use client';
 
 import { useState } from 'react';
-import { LogIn, ShieldCheck, Info } from 'lucide-react';
+import Image from 'next/image';
+import { useSession, signIn, signOut } from 'next-auth/react';
+import { LogIn, LogOut, ShieldCheck, Info } from 'lucide-react';
 import { SettingsSection, SettingsRow } from '@/components/settings/settings-section';
 import { ThemeToggle } from '@/components/layout/theme-toggle';
 import { Switch } from '@/components/ui/switch';
 import { Button } from '@/components/ui/button';
 
 export default function SettingsPage() {
+  const { data: session, status } = useSession();
   const [autoplay, setAutoplay] = useState(true);
   const [saveHistory, setSaveHistory] = useState(true);
   const [hdDefault, setHdDefault] = useState(false);
+
+  const signedIn = status === 'authenticated' && !!session?.user;
 
   return (
     <div className="container max-w-2xl py-6">
@@ -18,15 +23,47 @@ export default function SettingsPage() {
       <p className="mb-4 text-sm text-muted">Manage your MAAR Pulse account, appearance, and privacy preferences.</p>
 
       <SettingsSection title="Account" description="Sign in to sync subscriptions, history and saved videos across devices.">
-        <div className="flex items-center justify-between rounded-md border border-border bg-raised p-4">
-          <div>
-            <p className="text-sm font-medium text-ink">You're browsing as a guest</p>
-            <p className="text-xs text-muted">Sign in with Google to unlock personalization.</p>
+        {status === 'loading' ? (
+          <div className="h-[68px] animate-pulse rounded-md border border-border bg-raised" />
+        ) : signedIn ? (
+          <div className="flex items-center justify-between rounded-md border border-border bg-raised p-4">
+            <div className="flex min-w-0 items-center gap-3">
+              <div className="relative h-10 w-10 shrink-0 overflow-hidden rounded-full bg-gradient-to-br from-signal to-pulse">
+                {session.user.image ? (
+                  <Image
+                    src={session.user.image}
+                    alt={session.user.name ?? 'Account'}
+                    fill
+                    sizes="40px"
+                    className="object-cover"
+                    referrerPolicy="no-referrer"
+                  />
+                ) : (
+                  <span className="flex h-full w-full items-center justify-center text-sm font-semibold text-black">
+                    {(session.user.name ?? session.user.email ?? '?').charAt(0).toUpperCase()}
+                  </span>
+                )}
+              </div>
+              <div className="min-w-0">
+                {session.user.name && <p className="truncate text-sm font-medium text-ink">{session.user.name}</p>}
+                {session.user.email && <p className="truncate text-xs text-muted">{session.user.email}</p>}
+              </div>
+            </div>
+            <Button size="sm" variant="outline" className="shrink-0 gap-1.5" onClick={() => signOut({ callbackUrl: '/' })}>
+              <LogOut className="h-4 w-4" /> Sign out
+            </Button>
           </div>
-          <Button size="sm" className="gap-1.5">
-            <LogIn className="h-4 w-4" /> Sign in
-          </Button>
-        </div>
+        ) : (
+          <div className="flex items-center justify-between rounded-md border border-border bg-raised p-4">
+            <div>
+              <p className="text-sm font-medium text-ink">You're browsing as a guest</p>
+              <p className="text-xs text-muted">Sign in with Google to unlock personalization.</p>
+            </div>
+            <Button size="sm" className="gap-1.5" onClick={() => signIn('google')}>
+              <LogIn className="h-4 w-4" /> Sign in
+            </Button>
+          </div>
+        )}
       </SettingsSection>
 
       <SettingsSection
