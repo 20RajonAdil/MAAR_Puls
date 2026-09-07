@@ -106,7 +106,7 @@ These require product decisions (which auth/database provider, hosting for user 
 - ~~**Cross-device Subscriptions sync**~~ — **shipped.** See section 1b above. `hooks/use-subscriptions.ts` now merges `localStorage` with Firestore (`app/api/subscriptions/route.ts`) once signed in, keyed by `session.user.id`.
 - ~~**Cross-device History/Saved sync**~~ — **shipped.** See section 1b above. `hooks/use-local-video-list.ts` now merges `localStorage` with Firestore (`app/api/video-lists/route.ts`) once signed in, same pattern as Subscriptions.
 - ~~**Playlists tab**~~ — **shipped.** Channel pages fetch real public playlists via `playlists.list` (`lib/youtube/service.ts` → `getChannelPlaylists`), and clicking one opens `/playlist/[id]`, which lists that playlist's videos in order via `playlistItems.list` (`getPlaylistItems`), enriched with duration/views the same way search results are.
-- **Shorts tab**: honestly explained as a real YouTube Data API v3 limitation — the public API doesn't flag videos as Shorts, so MAAR Pulse can't separate them from regular uploads without scraping, which this project deliberately avoids.
+- **Shorts tab**: the public YouTube Data API v3 has no official "is this a Short" flag, so this is a heuristic, not a confirmed classification: a video counts as a Short when its duration is under 2 minutes **and** its thumbnail is square or narrower (aspect ratio ≤ 1:1) rather than standard 16:9 landscape. See `isLikelyShort` in `lib/utils.ts`. The Shorts tab UI says outright that this is estimated, since some regular short-form landscape videos or edge-case Shorts can be mis-sorted.
 
 ## 4. Architecture notes
 

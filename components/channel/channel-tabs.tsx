@@ -7,7 +7,7 @@ import { useVideos } from '@/hooks/use-videos';
 import { usePlaylists } from '@/hooks/use-playlists';
 import { VideoGrid } from '@/components/video/video-grid';
 import { PlaylistGrid } from '@/components/video/playlist-grid';
-import { EmptyState } from '@/components/ui/state-views';
+import { isLikelyShort } from '@/lib/utils';
 import type { ChannelSummary } from '@/types/youtube';
 
 const TABS = ['Home', 'Videos', 'Shorts', 'Playlists', 'About'] as const;
@@ -17,8 +17,10 @@ export function ChannelTabs({ channel }: { channel: ChannelSummary }) {
   const [tab, setTab] = useState<Tab>('Home');
   const uploadsUrl = `/api/youtube/channel?id=${channel.id}&uploads=1`;
   const { items, loading, error, hasMore, loadMore } = useVideos(
-    tab === 'Home' || tab === 'Videos' ? uploadsUrl : null
+    tab === 'Home' || tab === 'Videos' || tab === 'Shorts' ? uploadsUrl : null
   );
+  const longFormItems = items.filter((v) => !isLikelyShort(v));
+  const shortItems = items.filter(isLikelyShort);
 
   const playlistsUrl = `/api/youtube/playlists?channelId=${channel.id}`;
   const {
@@ -58,14 +60,24 @@ export function ChannelTabs({ channel }: { channel: ChannelSummary }) {
         )}
 
         {tab === 'Videos' && (
-          <VideoGrid items={items} loading={loading} error={error} hasMore={hasMore} onLoadMore={loadMore} />
+          <VideoGrid items={longFormItems} loading={loading} error={error} hasMore={hasMore} onLoadMore={loadMore} />
         )}
 
         {tab === 'Shorts' && (
-          <EmptyState
-            title="Shorts aren't distinguishable via the public API"
-            body="YouTube Data API v3 doesn't currently flag videos as Shorts, so MAAR Pulse can't reliably separate them from regular uploads yet — this is a platform limitation, not a bug."
-          />
+          <>
+            <p className="mb-4 text-xs text-faint">
+              Estimated from video length and thumbnail shape — YouTube's public API doesn't officially flag Shorts, so this list may be imperfect.
+            </p>
+            <VideoGrid
+              items={shortItems}
+              loading={loading}
+              error={error}
+              hasMore={hasMore}
+              onLoadMore={loadMore}
+              emptyTitle="No Shorts found"
+              emptyBody="Nothing in this channel's recent uploads looks like a Short (under 2 minutes, square or vertical) yet — try loading more."
+            />
+          </>
         )}
 
         {tab === 'Playlists' && (
