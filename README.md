@@ -105,7 +105,7 @@ These require product decisions (which auth/database provider, hosting for user 
 - **YouTube OAuth (reading the user's real YouTube subscriptions/likes)** is still deferred and kept as a separate concern from Google Sign-In, per the brief — the Settings page explains this distinction to the user rather than assuming one implies the other. It needs its own consent step requesting the narrower `youtube.readonly` scope, which isn't wired up yet.
 - ~~**Cross-device Subscriptions sync**~~ — **shipped.** See section 1b above. `hooks/use-subscriptions.ts` now merges `localStorage` with Firestore (`app/api/subscriptions/route.ts`) once signed in, keyed by `session.user.id`.
 - ~~**Cross-device History/Saved sync**~~ — **shipped.** See section 1b above. `hooks/use-local-video-list.ts` now merges `localStorage` with Firestore (`app/api/video-lists/route.ts`) once signed in, same pattern as Subscriptions.
-- **Playlists tab**: the channel page correctly explains (rather than fakes) that this needs the `playlists.list` endpoint, not yet wired.
+- ~~**Playlists tab**~~ — **shipped.** Channel pages fetch real public playlists via `playlists.list` (`lib/youtube/service.ts` → `getChannelPlaylists`), and clicking one opens `/playlist/[id]`, which lists that playlist's videos in order via `playlistItems.list` (`getPlaylistItems`), enriched with duration/views the same way search results are.
 - **Shorts tab**: honestly explained as a real YouTube Data API v3 limitation — the public API doesn't flag videos as Shorts, so MAAR Pulse can't separate them from regular uploads without scraping, which this project deliberately avoids.
 
 ## 4. Architecture notes

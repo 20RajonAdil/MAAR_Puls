@@ -34,6 +34,17 @@ export interface ChannelSummary {
   hiddenSubscriberCount?: boolean;
 }
 
+export interface PlaylistSummary {
+  id: string;
+  title: string;
+  description: string;
+  channelId: string;
+  channelTitle: string;
+  thumbnails: Record<'default' | 'medium' | 'high', Thumbnail | undefined>;
+  itemCount?: number;
+  publishedAt: string;
+}
+
 export interface CategoryItem {
   id: string;
   title: string;

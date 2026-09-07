@@ -4,7 +4,9 @@ import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { cn } from '@/lib/utils';
 import { useVideos } from '@/hooks/use-videos';
+import { usePlaylists } from '@/hooks/use-playlists';
 import { VideoGrid } from '@/components/video/video-grid';
+import { PlaylistGrid } from '@/components/video/playlist-grid';
 import { EmptyState } from '@/components/ui/state-views';
 import type { ChannelSummary } from '@/types/youtube';
 
@@ -17,6 +19,15 @@ export function ChannelTabs({ channel }: { channel: ChannelSummary }) {
   const { items, loading, error, hasMore, loadMore } = useVideos(
     tab === 'Home' || tab === 'Videos' ? uploadsUrl : null
   );
+
+  const playlistsUrl = `/api/youtube/playlists?channelId=${channel.id}`;
+  const {
+    items: playlists,
+    loading: playlistsLoading,
+    error: playlistsError,
+    hasMore: playlistsHasMore,
+    loadMore: loadMorePlaylists,
+  } = usePlaylists(tab === 'Playlists' ? playlistsUrl : null);
 
   return (
     <div>
@@ -58,9 +69,12 @@ export function ChannelTabs({ channel }: { channel: ChannelSummary }) {
         )}
 
         {tab === 'Playlists' && (
-          <EmptyState
-            title="Playlists coming soon"
-            body="Public playlists can be fetched via the playlists.list endpoint; this scaffold ships the core video experience first — see the README for the follow-up."
+          <PlaylistGrid
+            items={playlists}
+            loading={playlistsLoading}
+            error={playlistsError}
+            hasMore={playlistsHasMore}
+            onLoadMore={loadMorePlaylists}
           />
         )}
 

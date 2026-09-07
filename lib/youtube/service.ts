@@ -1,5 +1,5 @@
 import 'server-only';
-import type { VideoSummary, ChannelSummary, CategoryItem, PageResult, Thumbnail } from '@/types/youtube';
+import type { VideoSummary, ChannelSummary, CategoryItem, PageResult, Thumbnail, PlaylistSummary } from '@/types/youtube';
 
 const BASE_URL = 'https://www.googleapis.com/youtube/v3';
 
@@ -11,6 +11,7 @@ const REVALIDATE = {
   channels: 60 * 60,      // 1 hour
   popular: 60 * 30,       // 30 min
   categories: 60 * 60 * 24, // 24 hours — categories almost never change
+  playlists: 60 * 60,     // 1 hour — same cadence as channel data
 } as const;
 
 export class YouTubeApiError extends Error {
@@ -251,6 +252,81 @@ export async function getPopularVideos(opts: {
     REVALIDATE.popular
   );
   return { items: data.items.map(mapVideoItem).filter(isEmbeddable), nextPageToken: data.nextPageToken };
+}
+
+function mapPlaylistItem(item: any): PlaylistSummary {
+  const snippet = item.snippet ?? {};
+  return {
+    id: item.id,
+    title: snippet.title ?? '',
+    description: snippet.description ?? '',
+    channelId: snippet.channelId ?? '',
+    channelTitle: snippet.channelTitle ?? '',
+    thumbnails: {
+      default: snippet.thumbnails?.default,
+      medium: snippet.thumbnails?.medium,
+      high: snippet.thumbnails?.high,
+    },
+    itemCount: item.contentDetails?.itemCount,
+    publishedAt: snippet.publishedAt ?? '',
+  };
+}
+
+/** Public playlists owned by a channel — the `playlists.list` endpoint
+ * referenced in the README as the follow-up to the scaffold's Playlists
+ * tab. Only surfaces playlists YouTube itself reports as public. */
+export async function getChannelPlaylists(channelId: string, pageToken?: string): Promise<PageResult<PlaylistSummary>> {
+  const data = await ytFetch(
+    '/playlists',
+    { part: 'snippet,contentDetails', channelId, maxResults: 24, pageToken },
+    REVALIDATE.playlists
+  );
+  return {
+    items: (data.items ?? []).map(mapPlaylistItem),
+    nextPageToken: data.nextPageToken,
+  };
+}
+
+export async function getPlaylistById(id: string): Promise<PlaylistSummary | null> {
+  const data = await ytFetch(
+    '/playlists',
+    { part: 'snippet,contentDetails', id, maxResults: 1 },
+    REVALIDATE.playlists
+  );
+  const [item] = data.items ?? [];
+  return item ? mapPlaylistItem(item) : null;
+}
+
+/** Videos inside a playlist, in playlist order. Uses `playlistItems.list`
+ * for ordering/membership, then enriches with `videos.list` (duration,
+ * stats, embeddable status) the same way search results are enriched —
+ * so playlist videos filter out non-embeddable items and get real
+ * durations/view counts, not just the bare snippet. */
+export async function getPlaylistItems(playlistId: string, pageToken?: string): Promise<PageResult<VideoSummary>> {
+  const data = await ytFetch(
+    '/playlistItems',
+    { part: 'snippet', playlistId, maxResults: 24, pageToken },
+    REVALIDATE.playlists
+  );
+  const items = (data.items ?? []) as any[];
+  const ids = items
+    .map((i) => i.snippet?.resourceId?.videoId)
+    .filter(Boolean)
+    .join(',');
+  const enriched = ids ? await fetchVideoDetails(ids) : [];
+  const byId = new Map(enriched.map((v) => [v.id, v]));
+
+  const mapped = items
+    .map((i) => {
+      const videoId = i.snippet?.resourceId?.videoId;
+      return byId.get(videoId);
+    })
+    // Deleted/private videos still occupy a playlist slot but come back
+    // with no matching detail record — drop them rather than show a blank card.
+    .filter((v): v is VideoSummary => Boolean(v))
+    .filter(isEmbeddable);
+
+  return { items: mapped, nextPageToken: data.nextPageToken };
 }
 
 export async function getVideoCategories(regionCode = 'US'): Promise<CategoryItem[]> {

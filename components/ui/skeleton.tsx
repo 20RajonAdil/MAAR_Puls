@@ -29,3 +29,26 @@ export function VideoGridSkeleton({ count = 12 }: { count?: number }) {
     </div>
   );
 }
+
+export function PlaylistCardSkeleton() {
+  return (
+    <div className="flex flex-col gap-3">
+      <Skeleton className="aspect-video w-full rounded-lg" />
+      <div className="space-y-2">
+        <Skeleton className="h-4 w-[90%]" />
+        <Skeleton className="h-3 w-[50%]" />
+        <Skeleton className="h-3 w-[30%]" />
+      </div>
+    </div>
+  );
+}
+
+export function PlaylistGridSkeleton({ count = 12 }: { count?: number }) {
+  return (
+    <div className="grid grid-cols-1 gap-x-4 gap-y-8 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+      {Array.from({ length: count }).map((_, i) => (
+        <PlaylistCardSkeleton key={i} />
+      ))}
+    </div>
+  );
+}
