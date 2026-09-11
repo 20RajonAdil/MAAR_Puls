@@ -19,20 +19,22 @@ export function PlaylistCard({ playlist, index = 0 }: { playlist: PlaylistSummar
       className="group flex flex-col gap-3"
     >
       <Link href={`/playlist/${playlist.id}`} className="block outline-none">
-        <div className="relative aspect-video overflow-hidden rounded-lg bg-raised">
-          <Image
-            src={thumb.url}
-            alt={playlist.title}
-            fill
-            sizes="(max-width: 768px) 100vw, (max-width: 1280px) 33vw, 25vw"
-            className="object-cover transition-transform duration-300 group-hover:scale-[1.03]"
-          />
-          {/* Stacked-cards affordance so a playlist reads differently from a single video */}
-          <div className="pointer-events-none absolute inset-x-1.5 bottom-1.5 top-1.5 -z-10 rounded-md border border-white/10 bg-black/20" />
-          <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/0 to-black/0" />
-          <div className="absolute bottom-1.5 right-1.5 flex items-center gap-1 rounded bg-black/80 px-1.5 py-0.5 font-mono text-[11px] font-medium text-white">
-            <ListVideo className="h-3 w-3" />
-            {playlist.itemCount ?? '—'}
+        <div className="rounded-[1.25rem] bg-raised/60 p-1 ring-1 ring-border transition-colors duration-500 group-hover:ring-signal/30">
+          <div className="relative aspect-video overflow-hidden rounded-[calc(1.25rem-4px)] bg-overlay shadow-[inset_0_1px_1px_rgba(255,255,255,0.08)]">
+            <Image
+              src={thumb.url}
+              alt={playlist.title}
+              fill
+              sizes="(max-width: 768px) 100vw, (max-width: 1280px) 33vw, 25vw"
+              className="object-cover transition-transform duration-300 group-hover:scale-[1.03]"
+            />
+            {/* Stacked-cards affordance so a playlist reads differently from a single video */}
+            <div className="pointer-events-none absolute inset-x-1.5 bottom-1.5 top-1.5 -z-10 rounded-md border border-white/10 bg-black/20" />
+            <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/0 to-black/0" />
+            <div className="absolute bottom-2 right-2 flex items-center gap-1 rounded-md bg-black/80 px-1.5 py-0.5 font-mono text-[11px] font-medium text-white ring-1 ring-white/10">
+              <ListVideo className="h-3 w-3" />
+              {playlist.itemCount ?? '—'}
+            </div>
           </div>
         </div>
       </Link>
