@@ -71,23 +71,33 @@ export function formatRelativeTime(iso?: string): string {
 /** Duration threshold below which a video is eligible to be a Short. */
 const SHORT_MAX_SECONDS = 120;
 
-/** A thumbnail is "not widescreen" when it's square (1:1) or narrower
- * (portrait, i.e. true vertical Shorts) rather than the standard 16:9
- * landscape crop. width/height <= 1.05 covers exact 1:1 plus the vertical
- * aspect ratios YouTube actually serves Shorts thumbnails at. */
+/** A thumbnail is genuinely portrait/square when its reported width/height
+ * says so — but in practice YouTube's Data API almost always returns
+ * thumbnails at fixed preset canvases (120x90, 320x180, 480x360, 1280x720)
+ * regardless of the source video's real orientation, even for true
+ * vertical Shorts. So this can only ever be a confidence *boost* when the
+ * data happens to say something unambiguous — it can never be required,
+ * or it silently rejects almost everything (which is exactly what made
+ * the Shorts page come back empty). */
 const SHORT_MAX_ASPECT_RATIO = 1.05;
 
 /** YouTube Data API v3 has no official "is this a Short" flag, so this is
- * a heuristic: duration under 2 minutes AND a square-or-taller thumbnail
- * (not the standard 16:9 landscape crop). Undefined duration or thumbnail
- * dimensions (detail lookup wasn't performed) means "unknown" -> not a Short,
- * so nothing is mis-filed without evidence. */
+ * a heuristic based on the one signal that's actually reliable: duration
+ * under 2 minutes. contentDetails.duration is the real playback length
+ * regardless of orientation, unlike thumbnail dimensions (see
+ * hasPortraitThumbnail below), which almost never reflect true aspect
+ * ratio through the public API. */
 export function isLikelyShort(video: Pick<VideoSummary, 'duration' | 'thumbnails'>): boolean {
   const seconds = parseDurationSeconds(video.duration);
-  if (seconds === undefined || seconds <= 0 || seconds >= SHORT_MAX_SECONDS) return false;
+  return seconds !== undefined && seconds > 0 && seconds < SHORT_MAX_SECONDS;
+}
 
+/** True only when the thumbnail data itself clearly indicates a portrait
+ * or square frame (height >= width). Useful as an extra confidence signal
+ * where it happens to be available — never required, since most Shorts
+ * still report standard 16:9/4:3 preset thumbnail dimensions. */
+export function hasPortraitThumbnail(video: Pick<VideoSummary, 'thumbnails'>): boolean {
   const thumb = video.thumbnails.maxres ?? video.thumbnails.standard ?? video.thumbnails.high ?? video.thumbnails.medium ?? video.thumbnails.default;
   if (!thumb || !thumb.width || !thumb.height) return false;
-
   return thumb.width / thumb.height <= SHORT_MAX_ASPECT_RATIO;
 }

@@ -66,7 +66,7 @@ export function ChannelTabs({ channel }: { channel: ChannelSummary }) {
         {tab === 'Shorts' && (
           <>
             <p className="mb-4 text-xs text-faint">
-              Estimated from video length and thumbnail shape — YouTube's public API doesn't officially flag Shorts, so this list may be imperfect.
+              Estimated from video length — YouTube's public API doesn't officially flag Shorts, so this list may include the occasional short landscape video.
             </p>
             <VideoGrid
               items={shortItems}
@@ -75,7 +75,7 @@ export function ChannelTabs({ channel }: { channel: ChannelSummary }) {
               hasMore={hasMore}
               onLoadMore={loadMore}
               emptyTitle="No Shorts found"
-              emptyBody="Nothing in this channel's recent uploads looks like a Short (under 2 minutes, square or vertical) yet — try loading more."
+              emptyBody="Nothing in this channel's recent uploads is under 2 minutes yet — try loading more."
             />
           </>
         )}
