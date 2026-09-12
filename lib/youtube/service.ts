@@ -365,12 +365,15 @@ export async function getPlaylistItems(playlistId: string, pageToken?: string): 
 
 /**
  * A dedicated feed for the /shorts page. YouTube's public API has no
- * "give me the Shorts feed" endpoint, so this asks search.list to
- * pre-filter to short-duration videos (`videoDuration: 'short'` = under 4
- * minutes — the closest official filter available), then narrows further
- * with the same isLikelyShort() heuristic (duration < 2 min + square/
- * vertical thumbnail) used on channel pages, so what lands on /shorts is
- * consistent with what the Shorts tab shows elsewhere in the app.
+ * "give me the Shorts feed" endpoint, so this leans on search.list with
+ * `videoDuration: 'short'` (under 4 minutes — the closest official filter),
+ * then narrows further with isLikelyShort() (under 2 minutes). Critically,
+ * this always sends a real `q` term — search.list without any query term
+ * returns thin, unreliable result sets in practice (an empty q is not the
+ * same as "give me everything"), which is why the feed was coming back
+ * empty even after the duration-only filter fix. Defaults to a broad
+ * generic term when the caller doesn't supply one, so the default /shorts
+ * feed always has something to search against.
  */
 export async function getShortsFeed(opts: { query?: string; pageToken?: string } = {}): Promise<PageResult<VideoSummary>> {
   const data = await ytFetch(
@@ -381,7 +384,7 @@ export async function getShortsFeed(opts: { query?: string; pageToken?: string }
       videoDuration: 'short',
       order: 'viewCount',
       maxResults: 50,
-      q: opts.query,
+      q: opts.query?.trim() || 'shorts',
       pageToken: opts.pageToken,
       safeSearch: 'moderate',
     },
