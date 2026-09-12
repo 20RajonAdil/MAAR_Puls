@@ -19,7 +19,7 @@ export function ShortCard({ video, index = 0 }: { video: VideoSummary; index?: n
       transition={{ duration: 0.4, delay: Math.min(index, 10) * 0.03, ease: [0.22, 1, 0.36, 1] }}
       className="group flex flex-col gap-2"
     >
-      <Link href={`/watch/${video.id}`} className="block outline-none">
+      <Link href={`/shorts/${video.id}`} className="block outline-none">
         <div className="rounded-2xl bg-raised/60 p-1 ring-1 ring-border transition-colors duration-500 group-hover:ring-signal/30">
           <div className="relative aspect-[9/16] overflow-hidden rounded-[calc(1rem-4px)] bg-overlay shadow-[inset_0_1px_1px_rgba(255,255,255,0.08)]">
             <Image

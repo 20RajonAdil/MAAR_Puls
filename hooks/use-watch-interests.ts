@@ -23,6 +23,18 @@ export type WatchInterest =
   | { type: 'channel'; label: string; channelId: string }
   | { type: 'topic'; label: string; query: string };
 
+/** The single strongest interest signal, as a plain search term — used to
+ * keep the Shorts feed aligned with the exact same "because you watched/
+ * searched X" reasoning that drives the home page's personalized video
+ * rails, rather than running on an unrelated generic term. */
+export function primaryInterestQuery(interests: WatchInterest[]): string | undefined {
+  const topic = interests.find((i) => i.type === 'topic');
+  if (topic && topic.type === 'topic') return topic.query;
+  const channel = interests.find((i) => i.type === 'channel');
+  if (channel && channel.type === 'channel') return channel.label;
+  return undefined;
+}
+
 /**
  * Reads device-local watch history (`maar-pulse:history`) and search
  * history (`maar-pulse:searches`) and scores the words and channels that
