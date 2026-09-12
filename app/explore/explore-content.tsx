@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { useSearchParams } from 'next/navigation';
-import { Gamepad2, Cpu, GraduationCap, Newspaper, Trophy, FlaskConical, Leaf, Moon, Flame } from 'lucide-react';
+import { Gamepad2, Cpu, GraduationCap, Newspaper, Trophy, FlaskConical, Leaf, Moon, Flame, Music, Film, Tv, Smile } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useVideos } from '@/hooks/use-videos';
 import { VideoGrid } from '@/components/video/video-grid';
@@ -16,6 +16,10 @@ const CATEGORIES = [
   { label: 'Trending', icon: Flame, query: { kind: 'popular' as const } },
   { label: 'Gaming', icon: Gamepad2, query: { kind: 'category' as const, id: '20' } },
   { label: 'Technology', icon: Cpu, query: { kind: 'category' as const, id: '28' } },
+  { label: 'Music', icon: Music, query: { kind: 'category' as const, id: '10' } },
+  { label: 'Movies', icon: Film, query: { kind: 'category' as const, id: '1' } },
+  { label: 'Entertainment', icon: Tv, query: { kind: 'category' as const, id: '24' } },
+  { label: 'Comedy', icon: Smile, query: { kind: 'category' as const, id: '23' } },
   { label: 'Education', icon: GraduationCap, query: { kind: 'category' as const, id: '27' } },
   { label: 'News', icon: Newspaper, query: { kind: 'category' as const, id: '25' } },
   { label: 'Sports', icon: Trophy, query: { kind: 'category' as const, id: '17' } },
