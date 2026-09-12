@@ -52,3 +52,22 @@ export function PlaylistGridSkeleton({ count = 12 }: { count?: number }) {
     </div>
   );
 }
+
+export function ShortCardSkeleton() {
+  return (
+    <div className="flex flex-col gap-2">
+      <Skeleton className="aspect-[9/16] w-full rounded-2xl" />
+      <Skeleton className="h-3 w-[60%]" />
+    </div>
+  );
+}
+
+export function ShortsGridSkeleton({ count = 12 }: { count?: number }) {
+  return (
+    <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
+      {Array.from({ length: count }).map((_, i) => (
+        <ShortCardSkeleton key={i} />
+      ))}
+    </div>
+  );
+}

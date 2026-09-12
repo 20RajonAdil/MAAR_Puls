@@ -3,11 +3,12 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { motion } from 'framer-motion';
-import { Home, Compass, Users, Bookmark, User } from 'lucide-react';
+import { Home, Compass, Users, Bookmark, User, Zap } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 const ITEMS = [
   { href: '/', label: 'Home', icon: Home },
+  { href: '/shorts', label: 'Shorts', icon: Zap },
   { href: '/explore', label: 'Explore', icon: Compass },
   { href: '/subscriptions', label: 'Subs', icon: Users },
   { href: '/saved', label: 'Saved', icon: Bookmark },

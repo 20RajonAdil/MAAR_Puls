@@ -1,5 +1,6 @@
 import 'server-only';
 import type { VideoSummary, ChannelSummary, CategoryItem, PageResult, Thumbnail, PlaylistSummary } from '@/types/youtube';
+import { isLikelyShort } from '@/lib/utils';
 
 const BASE_URL = 'https://www.googleapis.com/youtube/v3';
 
@@ -360,6 +361,38 @@ export async function getPlaylistItems(playlistId: string, pageToken?: string): 
     .filter(isEmbeddable);
 
   return { items: mapped, nextPageToken: data.nextPageToken };
+}
+
+/**
+ * A dedicated feed for the /shorts page. YouTube's public API has no
+ * "give me the Shorts feed" endpoint, so this asks search.list to
+ * pre-filter to short-duration videos (`videoDuration: 'short'` = under 4
+ * minutes — the closest official filter available), then narrows further
+ * with the same isLikelyShort() heuristic (duration < 2 min + square/
+ * vertical thumbnail) used on channel pages, so what lands on /shorts is
+ * consistent with what the Shorts tab shows elsewhere in the app.
+ */
+export async function getShortsFeed(opts: { query?: string; pageToken?: string } = {}): Promise<PageResult<VideoSummary>> {
+  const data = await ytFetch(
+    '/search',
+    {
+      part: 'snippet',
+      type: 'video',
+      videoDuration: 'short',
+      order: 'viewCount',
+      maxResults: 50,
+      q: opts.query,
+      pageToken: opts.pageToken,
+      safeSearch: 'moderate',
+    },
+    REVALIDATE.search
+  );
+
+  const ids = data.items.map((i: any) => i.id.videoId).filter(Boolean).join(',');
+  const enriched = ids ? await fetchVideoDetails(ids) : [];
+  const items = enriched.filter(isEmbeddable).filter(isLikelyShort);
+
+  return { items, nextPageToken: data.nextPageToken };
 }
 
 export async function getVideoCategories(regionCode = 'US'): Promise<CategoryItem[]> {
