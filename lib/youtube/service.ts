@@ -107,6 +107,39 @@ function isEmbeddable(video: VideoSummary): boolean {
   return video.embeddable !== false;
 }
 
+/** Video list/search/playlist endpoints return channelId + channelTitle
+ * but never a channel avatar — YouTube's API simply doesn't include one
+ * there. This is why every video card was rendering an empty circle
+ * instead of the channel's logo. Batches a single channels.list call
+ * (up to 50 IDs per call, so a chunk per 50 unique channels) to backfill
+ * `channelThumbnail` for a whole list of videos at once. */
+async function enrichChannelThumbnails(videos: VideoSummary[]): Promise<VideoSummary[]> {
+  const ids = Array.from(new Set(videos.map((v) => v.channelId).filter(Boolean)));
+  if (ids.length === 0) return videos;
+
+  const chunks: string[][] = [];
+  for (let i = 0; i < ids.length; i += 50) chunks.push(ids.slice(i, i + 50));
+
+  const avatarById = new Map<string, string | undefined>();
+  await Promise.all(
+    chunks.map(async (chunk) => {
+      try {
+        const data = await ytFetch('/channels', { part: 'snippet', id: chunk.join(',') }, REVALIDATE.channels);
+        for (const item of data.items ?? []) {
+          const url = item.snippet?.thumbnails?.default?.url ?? item.snippet?.thumbnails?.medium?.url;
+          avatarById.set(item.id, url);
+        }
+      } catch {
+        // Avatar enrichment is cosmetic — if this batch fails (quota, network),
+        // fall through and let those videos keep the fallback avatar glyph
+        // rather than breaking the whole video list.
+      }
+    })
+  );
+
+  return videos.map((v) => ({ ...v, channelThumbnail: avatarById.get(v.channelId) ?? v.channelThumbnail }));
+}
+
 /** Internal — fetches full video details without filtering, so callers
  * that merge these into a search-result list can decide what to drop. */
 async function fetchVideoDetails(ids: string): Promise<VideoSummary[]> {
@@ -115,7 +148,7 @@ async function fetchVideoDetails(ids: string): Promise<VideoSummary[]> {
     { part: 'snippet,contentDetails,statistics,status', id: ids },
     REVALIDATE.videos
   );
-  return data.items.map(mapVideoItem);
+  return enrichChannelThumbnails(data.items.map(mapVideoItem));
 }
 
 /** Full-text search across videos. Mirrors YouTube's `search.list`. */
@@ -251,7 +284,7 @@ export async function getPopularVideos(opts: {
     },
     REVALIDATE.popular
   );
-  return { items: data.items.map(mapVideoItem).filter(isEmbeddable), nextPageToken: data.nextPageToken };
+  return { items: (await enrichChannelThumbnails(data.items.map(mapVideoItem))).filter(isEmbeddable), nextPageToken: data.nextPageToken };
 }
 
 function mapPlaylistItem(item: any): PlaylistSummary {

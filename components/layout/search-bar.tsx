@@ -30,9 +30,9 @@ export function SearchBar({ variant = 'desktop' }: { variant?: 'desktop' | 'mobi
             setMobileOpen(true);
             requestAnimationFrame(() => inputRef.current?.focus());
           }}
-          className="flex h-10 w-10 items-center justify-center rounded-full text-ink hover:bg-raised"
+          className="flex h-10 w-10 items-center justify-center rounded-full border border-border bg-raised text-ink transition-colors hover:bg-overlay hover:text-signal"
         >
-          <Search className="h-5 w-5" />
+          <Search className="h-[18px] w-[18px]" />
         </button>
         <AnimatePresence>
           {mobileOpen && (
@@ -43,7 +43,7 @@ export function SearchBar({ variant = 'desktop' }: { variant?: 'desktop' | 'mobi
               transition={{ duration: 0.18 }}
               className="glass fixed inset-x-0 top-0 z-50 flex items-center gap-2 border-b border-border px-3 py-3"
             >
-              <form onSubmit={submit} className="flex flex-1 items-center gap-2">
+              <form onSubmit={submit} className="flex flex-1 items-center gap-2 rounded-full border border-border bg-raised px-4 py-2">
                 <Search className="h-4 w-4 shrink-0 text-muted" />
                 <input
                   ref={inputRef}
@@ -53,7 +53,7 @@ export function SearchBar({ variant = 'desktop' }: { variant?: 'desktop' | 'mobi
                   className="flex-1 bg-transparent text-sm text-ink outline-none placeholder:text-faint"
                 />
               </form>
-              <button aria-label="Close search" onClick={() => setMobileOpen(false)} className="rounded-full p-1.5 hover:bg-raised">
+              <button aria-label="Close search" onClick={() => setMobileOpen(false)} className="rounded-full border border-border bg-raised p-2 text-muted hover:text-ink">
                 <X className="h-4 w-4" />
               </button>
             </motion.div>
